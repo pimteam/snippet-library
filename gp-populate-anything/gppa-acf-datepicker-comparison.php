@@ -3,13 +3,13 @@
  * Gravity Perks // Populate Anything // Parse ACF Date Picker Fields for Comparison
  * https://gravitywiz.com/documentation/gravity-forms-populate-anything/
  *
- * The snippet will cast dates saved by Advanced Custom Fields into dates that are comparable using MySQL queries.
+ * The snippet will cast dates saved by Advanced Custom Fields or Custom Post Types created with Pods into dates that are comparable using MySQL queries.
  *
  * Instruction
  *
  * Replace DATEPICKERMETAKEYNAME with the appropriate ACF Date Picker Field meta key name.
  *
- * Plugin Name:  GP Populate Anything — Parse ACF Date Picker Fields for Comparison
+ * Plugin Name:  GP Populate Anything — Parse ACF Date Picker Fields/Pods Custom Post Types for Comparison
  * Plugin URI:   https://gravitywiz.com/documentation/gravity-forms-populate-anything/
  * Description:  Cast dates saved by Advanced Custom Fields into dates that are comparable using MySQL queries.
  * Author:       Gravity Wiz
@@ -43,13 +43,17 @@ function process_filter_acf_date_picker( $query_builder_args, $args ) {
 	$object_type->acf_meta_query_counter ++;
 	$as_table = 'mq' . $object_type->acf_meta_query_counter;
 
+	// change date_format, as per the targetted post type.
+	// '%%Y%%m%%d' for ACF, pr '%%Y-%%m-%%d' for Pods
+	$date_format = '%%Y%%m%%d';
+
 	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	$query_builder_args['where'][ $filter_group_index ][] = $wpdb->prepare( "(
 				{$as_table}.meta_key = %s
 				AND
-				STR_TO_DATE({$as_table}.meta_value, '%%Y%%m%%d')
+				STR_TO_DATE({$as_table}.meta_value, )
 				{$meta_operator}
-				STR_TO_DATE(%s, '%%m/%%d/%%Y')
+				STR_TO_DATE(%s, $date_format)
 			)", rgar( $property, 'value' ), $meta_value );
 
 	$query_builder_args['joins'][ $as_table ] = "LEFT JOIN {$wpdb->postmeta} AS {$as_table} ON ( {$wpdb->posts}.ID = {$as_table}.post_id )";
